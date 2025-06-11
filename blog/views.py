@@ -11,7 +11,7 @@ from django.shortcuts import redirect, render
 from django.views.generic import ListView, DetailView
 
 
-PER_PAGE = 2
+PER_PAGE = 9
 
 class PostListView(ListView):
     #model = Post

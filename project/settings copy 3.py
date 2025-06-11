@@ -12,22 +12,56 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Exemplo de logging para verificar as variáveis de ambiente
+logger.debug(f"SECRET_KEY: {os.getenv('SECRET_KEY')}")
+logger.debug(f"DEBUG: {os.getenv('DEBUG')}")
+logger.debug(f"ALLOWED_HOSTS: {os.getenv('ALLOWED_HOSTS')}")
+logger.debug(f"POSTGRES_DB: {os.getenv('POSTGRES_DB')}")
+logger.debug(f"POSTGRES_USER: {os.getenv('POSTGRES_USER')}")
+logger.debug(f"POSTGRES_PASSWORD: {os.getenv('POSTGRES_PASSWORD')}")
+logger.debug(f"POSTGRES_HOST: {os.getenv('POSTGRES_HOST')}")
+logger.debug(f"POSTGRES_PORT: {os.getenv('POSTGRES_PORT')}")
+logger.debug(f"DB_ENGINE: {os.getenv('DB_ENGINE')}")
+
+print('===================================================')
+print(f"SECRET_KEY: {os.getenv('SECRET_KEY')}")
+print(f"DEBUG: {os.getenv('DEBUG')}")
+print(f"ALLOWED_HOSTS: {os.getenv('ALLOWED_HOSTS')}")
+print(f"POSTGRES_DB: {os.getenv('POSTGRES_DB')}")
+print(f"POSTGRES_USER: {os.getenv('POSTGRES_USER')}")
+print(f"POSTGRES_PASSWORD: {os.getenv('POSTGRES_PASSWORD')}")
+print(f"POSTGRES_HOST: {os.getenv('POSTGRES_HOST')}")
+print(f"POSTGRES_PORT: {os.getenv('POSTGRES_PORT')}")
+print(f"DB_ENGINE: {os.getenv('DB_ENGINE')}")
+print('===================F I M==============================')
+
+'''
+x=0
+y = 2 / 0
+'''
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # DOTENV
-load_dotenv(BASE_DIR.parent / 'dotenv_files' / '.env', override=True)
+#load_dotenv(BASE_DIR.parent / 'dotenv_files' / '.env', override=True)
+load_dotenv(BASE_DIR / 'dotenv_files' / '.env', override=True)
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-33m7*=a=2yo_lv4)x_=k#s63-u-$z73kc@=@!@jo-e*%r8228@'
+#SECRET_KEY = 'django-insecure-33m7*=a=2yo_lv4)x_=k#s63-u-$z73kc@=@!@jo-e*%r8228@'
+SECRET_KEY = os.getenv('SECRET_KEY', 'sua-chave-de-desenvolvimento-padrao')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.getenv('DEBUG', 'False') == 'True'
-DEBUG = True
+#DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 
 # ALLOWED_HOSTS = ['pji310-blog.onrender.com', 'localhost', '127.0.0.1']
@@ -98,13 +132,25 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Banco de Dados
+if os.getenv('DB_ENGINE') == 'django.db.backends.postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE'),
+            'NAME': os.getenv('POSTGRES_DB'),
+            'USER': os.getenv('POSTGRES_USER'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+            'HOST': os.getenv('POSTGRES_HOST'),
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        }
     }
-}
-
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -195,10 +241,31 @@ AXES_FAILURE_LIMIT = 3
 AXES_COOLOFF_TIME = 1  # 1 Hora
 AXES_RESET_ON_SUCCESS = True
 
-# Importa configurações locais, se existirem
-try:
-    from project.local_settings import *
-except ImportError:
-    pass
-
-
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
