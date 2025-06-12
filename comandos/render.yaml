@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: univesp-blog
+    env: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn project.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        value: CHANGE-ME-SECRET-KEY
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: univesp-blog.onrender.com
+      - key: DB_ENGINE
+        value: django.db.backends.postgresql
+      - key: POSTGRES_DB
+        value: CHANGE-ME-DB-NAME
+      - key: POSTGRES_USER
+        value: CHANGE-ME-DB-USER
+      - key: POSTGRES_PASSWORD
+        value: CHANGE-ME-DB-PASSWORD
+      - key: POSTGRES_HOST
+        value: CHANGE-ME-DB-HOST
+      - key: POSTGRES_PORT
+        value: 5432

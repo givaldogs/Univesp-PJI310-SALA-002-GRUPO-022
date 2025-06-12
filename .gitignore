@@ -110,6 +110,7 @@ env.bak/
 venv.bak/
 posts/
 anotacao.txt 
+anota_chatgpt.txt
 
 # mkdocs documentation
 /site
