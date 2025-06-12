@@ -16,22 +16,51 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# arquivos estaticos vao estar na pasta a partir da raiz /data/web/static:
+# arquivos media vao estar na pasta a partir da raiz /data/web/media:
+# /data/web/static
+DATA_DIR = BASE_DIR.parent / 'data' / 'web'
+
 # DOTENV
-load_dotenv(BASE_DIR.parent / 'dotenv_files' / '.env', override=True)
+#load_dotenv(BASE_DIR.parent / 'dotenv_files' / '.env', override=True)
+load_dotenv(BASE_DIR / 'dotenv_files' / '.env', override=True)
+
+# # Teste para garantir que as variáveis estão sendo carregadas
+# print("SECRET_KEY:", os.getenv('SECRET_KEY'))
+# print("DB_ENGINE:", os.getenv('DB_ENGINE'))
+# print("POSTGRES_DB:", os.getenv('POSTGRES_DB'))
+# print("POSTGRES_USER:", os.getenv('POSTGRES_USER'))
+# print("POSTGRES_PASSWORD:", os.getenv('POSTGRES_PASSWORD'))
+# print("POSTGRES_HOST:", os.getenv('POSTGRES_HOST'))
+# print("POSTGRES_PORT:", os.getenv('POSTGRES_PORT'))
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-33m7*=a=2yo_lv4)x_=k#s63-u-$z73kc@=@!@jo-e*%r8228@'
+#SECRET_KEY = 'django-insecure-33m7*=a=2yo_lv4)x_=k#s63-u-$z73kc@=@!@jo-e*%r8228@'
+# ========== Segurança ==========
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("A variável SECRET_KEY está ausente no .env")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = os.getenv('DEBUG', 'False') == 'True'
-DEBUG = True
+#DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').strip().lower() == 'true'
 
+# Checa se está rodando na Render (ou outra variável que quiser)
+IS_RENDER = os.getenv('RENDER', 'false').strip().lower() == 'true'
 
 # ALLOWED_HOSTS = ['pji310-blog.onrender.com', 'localhost', '127.0.0.1']
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+#ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+
+ALLOWED_HOSTS = [
+    h.strip() for h in os.getenv('ALLOWED_HOSTS', '').split(',')
+    if h.strip()
+]
 
 
 # Application definition
@@ -57,6 +86,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -98,12 +128,34 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.getenv("DB_ENGINE") == "django.db.backends.postgresql":
+    # ========== Banco de Dados ==========
+
+    required_db_vars = [
+    'DB_ENGINE', 'POSTGRES_DB', 'POSTGRES_USER',
+    'POSTGRES_PASSWORD', 'POSTGRES_HOST', 'POSTGRES_PORT'
+    ]
+    for var in required_db_vars:
+        if not os.getenv(var):
+            raise ValueError(f"A variável {var} está ausente no .env")
+        
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE'),
+            'NAME': os.getenv('POSTGRES_DB'),
+            'USER': os.getenv('POSTGRES_USER'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+            'HOST': os.getenv('POSTGRES_HOST'),
+            'PORT': os.getenv('POSTGRES_PORT'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -142,13 +194,30 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# /data/web/static
-STATIC_ROOT =  BASE_DIR  / 'static'
-
 MEDIA_URL = '/media/'
 
-# /data/web/media
-MEDIA_ROOT = BASE_DIR  / 'media'
+if IS_RENDER:
+    STATIC_ROOT = BASE_DIR / os.getenv('STATIC_ROOT', 'staticfiles')
+    MEDIA_ROOT = BASE_DIR / os.getenv('MEDIA_ROOT', 'mediafiles')
+else:
+    # /data/web/static
+    STATIC_ROOT = DATA_DIR / 'static'
+    # /data/web/media
+    MEDIA_ROOT = DATA_DIR / 'media'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+# print(f"IS_RENDER: {IS_RENDER}")
+# print(f"STATIC_ROOT: {STATIC_ROOT}")
+# print(f"MEDIA_ROOT: {MEDIA_ROOT}")
+
+# print(f'STATIC_URL {STATIC_URL}')
+# print(f'STATIC_ROOT {STATIC_ROOT}')
+# print(f'MEDIA_URL  {MEDIA_URL }')
+# print(f'MEDIA_ROOT {MEDIA_ROOT}')
+# print(f'DATA_DIR {DATA_DIR}')
+# print(f'BASE_DIR {BASE_DIR}')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
