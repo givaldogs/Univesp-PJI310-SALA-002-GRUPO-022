@@ -7,13 +7,13 @@ echo "Instalando dependências..."
 pip install -r requirements.txt
 
 echo "Executando migrações..."
-python manage.py migrate --noinput
+python3 manage.py migrate --noinput
 
 echo "Coletando arquivos estáticos..."
-python manage.py collectstatic --noinput
+python3 manage.py collectstatic --noinput
 
 echo "Criando superusuário (se não existir)..."
-python manage.py shell << END
+python3 manage.py shell << END
 import os
 from django.contrib.auth import get_user_model
 
